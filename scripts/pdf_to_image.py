@@ -43,8 +43,11 @@ def convert_pdfs(pdfs_dir, output_dir):
     for pdf in tqdm.tqdm(pdfs_dir.listdir("*.pdf")):
         f_name = pdf.name.split('.')[0]
         out = output_dir.child(f_name)
-        args.append((pdf, out))
+        outfile = output + '-1.png'
+        if not outfile.exists():
+            args.append((pdf, out))
 
+    print('Converting {} pdfs'.format(len(args)))
     with Pool(NUM_OF_PROCESSES) as pool:
         pool.starmap(convert_to_png, args)
 
