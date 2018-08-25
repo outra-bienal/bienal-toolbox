@@ -158,20 +158,20 @@ def download_s3_file(filepath, output_dir):
 
 @click.command()
 @click.argument("output_dir", type=click.Path(exists=False))
-@click.option("--detectron_pdfs", default=False)
-def download_frames(output_dir, detectron_pdfs):
+@click.option('--pdfs-only/--frames-only', default=False)
+def download_frames(output_dir, pdfs_only):
     output_dir = Path(output_dir)
     if not output_dir.exists():
         os.makedirs(output_dir)
 
     args = []
 
-    if detectron_pdfs:
+    if pdfs_only:
         for pdf in get_detectron_pdfs_frames_paths():
-            args.append(pdf, output_dir)
+            args.append((pdf, output_dir))
     else:
         for frame in get_video_frames_path():
-            args.append(frame, output_dir)
+            args.append((frame, output_dir))
 
     print('Donwloading {} frames...'.format(len(args)))
     with Pool(NUM_OF_PROCESSES) as pool:
