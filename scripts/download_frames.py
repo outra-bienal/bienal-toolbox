@@ -6,14 +6,15 @@ import subprocess
 from multiprocessing import Pool
 from unipath import Path
 
-from frames_ranges import DETECTRON_LEVA_1, DETECTRON_LEVA_2
+from frames_ranges import *
 
 
 NUM_OF_PROCESSES = 8
 S3_BUCKET = 's3://videos-frame-images/'
-
 FRAMES_BY_SERVICE = {
     'detectron': (DETECTRON_LEVA_1, DETECTRON_LEVA_2),
+    'yolo': (YOLO_LEVA_1, YOLO_LEVA_2),
+    'detectron-extra': ([], DETECTRON_EXTRA_LEVA_2),
 }
 
 
