@@ -114,34 +114,30 @@ def get_frames_from_range(start, end):
         yield "{} {}".format(prefix, frame)
 
 
-def get_detectron_pdfs_frames_paths():
+def frames_iter(frames_ranges, s3_dir, ext=''):
+    if ext:
+        ext = '.{}'.format(ext)
+    for start, end in frames_ranges:
+        for frame in get_frames_from_range(start, end):
+            yield '{}{}{}.jpg{}'.format(
+                S3_BUCKET, s3_dir, frame, ext
+            )
+
+
+def get_detectron_pdfs_frames_paths(leva_1_ranges, leva_2_ranges):
     dir_1, dir_2 = 'detectron-results/leva-1/', 'detectron-results/leva-2/'
-    for start, end in leva_1_ranges:
-        for frame in get_frames_from_range(start, end):
-            yield '{}{}{}.jpg.pdf'.format(
-                S3_BUCKET, dir_1, frame
-            )
-
-    for start, end in leva_2_ranges:
-        for frame in get_frames_from_range(start, end):
-            yield '{}{}{}.jpg.pdf'.format(
-                S3_BUCKET, dir_2, frame
-            )
+    for frame in frames_iter(leva_1_ranges, dir_1, ext='pdf'):
+        yield frame
+    for frame in frames_iter(leva_2_ranges, dir_2, ext='pdf'):
+        yield frame
 
 
-def get_video_frames_path():
+def get_video_frames_path(leva_1_ranges, leva_2_ranges):
     dir_1, dir_2 = 'yolo_leva_1/', 'yolo_leva_2/'
-    for start, end in leva_1_ranges:
-        for frame in get_frames_from_range(start, end):
-            yield '{}{}{}.jpg'.format(
-                S3_BUCKET, dir_1, frame
-            )
-
-    for start, end in leva_2_ranges:
-        for frame in get_frames_from_range(start, end):
-            yield '{}{}{}.jpg'.format(
-                S3_BUCKET, dir_2, frame
-            )
+    for frame in frames_iter(leva_1_ranges, dir_1):
+        yield frame
+    for frame in frames_iter(leva_2_ranges, dir_2):
+        yield frame
 
 
 def download_s3_file(filepath, output_dir):
@@ -167,10 +163,10 @@ def download_frames(output_dir, pdfs_only):
     args = []
 
     if pdfs_only:
-        for pdf in get_detectron_pdfs_frames_paths():
+        for pdf in get_detectron_pdfs_frames_paths(leva_1_ranges, leva_2_ranges):
             args.append((pdf, output_dir))
     else:
-        for frame in get_video_frames_path():
+        for frame in get_video_frames_path(leva_1_ranges, leva_2_ranges):
             args.append((frame, output_dir))
 
     print('Donwloading {} frames...'.format(len(args)))
