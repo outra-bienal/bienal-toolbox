@@ -52,6 +52,12 @@ def get_video_frames_path(leva_1_ranges, leva_2_ranges):
         yield frame
 
 
+def check_if_not_downlowaded(filepath, output_dir):
+    filename = filepath.split('/')[-1]
+    file_path = output_dir.child(filename)
+    return file_path.exists()
+
+
 def download_s3_file(filepath, output_dir):
     command = ' '.join([
         'aws',
@@ -64,6 +70,7 @@ def download_s3_file(filepath, output_dir):
     download.wait()
 
 
+
 @click.command()
 @click.argument("service_frames", type=str)
 @click.argument("output_dir", type=click.Path(exists=False))
@@ -72,6 +79,12 @@ def download_frames(service_frames, output_dir, pdfs_only):
     output_dir = Path(output_dir)
     if not output_dir.exists():
         os.makedirs(output_dir)
+
+    y1, y2 = output_dir.child('y1'), output_dir.child('y2')
+    if not y1.exists():
+        os.makedirs(y1)
+    if not y2.exists():
+        os.makedirs(y2)
 
     args = []
     if service_frames in FRAMES_BY_SERVICE:
@@ -86,8 +99,12 @@ def download_frames(service_frames, output_dir, pdfs_only):
         for pdf in get_detectron_pdfs_frames_paths(*frames_ranges):
             args.append((pdf, output_dir))
     else:
-        for frame in get_video_frames_path(*frames_ranges):
-            args.append((frame, output_dir))
+        for frame in get_video_frames_path(frames_ranges[0], []):
+            if not check_if_not_downlowaded(frame, y1):
+                args.append((frame, y1))
+        for frame in get_video_frames_path([], frames_ranges[1]):
+            if not check_if_not_downlowaded(frame, y2):
+                args.append((frame, y2))
 
     print('Donwloading {} frames...'.format(len(args)))
     with Pool(NUM_OF_PROCESSES) as pool:
