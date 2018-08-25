@@ -89,9 +89,8 @@ def download_frames(service_frames, output_dir, pdfs_only):
             args.append((frame, output_dir))
 
     print('Donwloading {} frames...'.format(len(args)))
-    print(args)
-    #with Pool(NUM_OF_PROCESSES) as pool:
-    #    pool.starmap(download_s3_file, args)
+    with Pool(NUM_OF_PROCESSES) as pool:
+        pool.starmap(download_s3_file, args)
 
 
 if __name__ == '__main__':
