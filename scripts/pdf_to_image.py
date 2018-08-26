@@ -43,7 +43,7 @@ def convert_pdfs(pdfs_dir, output_dir):
     for pdf in tqdm.tqdm(pdfs_dir.listdir("*.pdf")):
         f_name = pdf.name.split('.')[0]
         out = output_dir.child(f_name)
-        outfile = output + '-1.png'
+        outfile = out + '-1.png'
         if not outfile.exists():
             args.append((pdf, out))
 
