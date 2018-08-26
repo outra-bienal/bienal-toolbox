@@ -15,6 +15,7 @@ FRAMES_BY_SERVICE = {
     'detectron': (DETECTRON_LEVA_1, DETECTRON_LEVA_2),
     'yolo': (YOLO_LEVA_1, YOLO_LEVA_2),
     'detectron-extra': ([], DETECTRON_EXTRA_LEVA_2),
+    'dense-cap': ([], DENSE_CAP_LEVA_2),
 }
 
 
