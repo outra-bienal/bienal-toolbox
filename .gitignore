@@ -9,3 +9,4 @@
 *.sqlite3
 *.map
 __pycache__
+scripts/faces-extraction/out/
