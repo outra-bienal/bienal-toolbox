@@ -2,6 +2,7 @@
 import click
 import cv2
 import os
+from random import choice
 
 from tqdm import tqdm
 from bienal import BienalClient
@@ -12,37 +13,51 @@ TEMP_DIR = Path('/', 'tmp')
 
 
 def extract_faces(image_data, out_dir):
-    faces = image_data.ibm.faces.get('faces', [])
+    #faces = image_data.ibm.faces.get('faces', [])
+    faces = image_data.aws.faces.get('FaceDetails', [])
     if not faces:
-        return
-
-    image_response = requests.get(image_data['image'])
-    if not image_response.ok:
-        print("Error downloading image")
         return
 
     filename = image_data['image'].split('/')[-1]
     splited = filename.split('.')
-    filename = '.'.join(splited)
     temp_file = TEMP_DIR.child(filename)
 
-    with open(temp_file, 'bw') as fd:
-        fd.write(image_response.content)
+    if not temp_file.exists():
+        image_response = requests.get(image_data['image'])
+        if not image_response.ok:
+            print("Error downloading image")
+            return
+
+        with open(temp_file, 'bw') as fd:
+            fd.write(image_response.content)
 
     img = cv2.imread(temp_file)
-    for i, face in enumerate(faces):
-        loc = face['face_location']
-        x, y = loc['left'], loc['top']
-        w, h = loc['width'], loc['height']
+    height, width = img.shape[:2]
+    offset = 15
 
-        offset = 15
-        x -= offset
-        y -= offset
-        w += offset
-        h += offset
+    for i, face in enumerate(faces):
+        loc = face['BoundingBox']
+        x, y = loc['Left'], loc['Top']
+        w, h = loc['Width'], loc['Height']
+        x = int(x * width - offset)
+        y = int(y * height - offset)
+        w = int(w * width + offset)
+        h = int(h * height + offset)
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        if w > width:
+            w = width
+        if h > height:
+            h = height
 
         crop_face = img[y:y+h, x:x+w]
-        head_name = out_dir.child("head-{}-{}".format(i, filename))
+        head_name = out_dir.child("head-{}-{}.{}".format(splited[0], i, splited[1]))
+        if head_name.exists():
+            random_i = choice(range(1000000))
+            head_name = out_dir.child("head-{}-{}.{}".format(splited[0], random_i, splited[1]))
+
         cv2.imwrite(head_name, crop_face)
 
 
