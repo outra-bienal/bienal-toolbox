@@ -10,3 +10,5 @@
 *.map
 __pycache__
 scripts/faces-extraction/out/
+bienal_eng
+frames
