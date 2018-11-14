@@ -19,26 +19,35 @@ class Transcriptions():
     def curr_word(self):
         return self.transcriptions[self.curr_word_index]
 
+    @property
+    def next_word(self):
+        return self.transcriptions[self.curr_word_index + 1]
+
     def get_duration(self, index, word):
         curr_word = self.curr_word
+
         try:
-            if word == curr_word['word'].strip().lower():
+            clean_word = curr_word['word'].strip().lower()
+
+            if word == clean_word:
                 self.curr_word_index += 1
+                return curr_word['start'], curr_word['end']
+            elif '-' in word:
+                next_word = self.next_word
+                if word == '{}-{}'.format(clean_word, self.next_word['word'].strip().lower()):
+                    self.curr_word_index += 2
+                    return curr_word['start'], next_word['end']
 
-                start, end = curr_word['start'], curr_word['end']
-                duration = end - start
-                return start, end, duration
-
-            return None, None, None
+            return None, None
         except KeyError:
-            return None, None, None
+            return None, None
 
 
 @click.command()
 @click.argument("results_csv", type=click.Path(exists=True))
 @click.argument("transcription_file", type=click.Path(exists=True))
 def prepare_results_csv(results_csv, transcription_file):
-    transcriptions = Transcriptions(transcription_file)
+    trans = Transcriptions(transcription_file)
 
     duration_rows = []
     images = rows.import_from_csv(results_csv)
@@ -47,16 +56,11 @@ def prepare_results_csv(results_csv, transcription_file):
         width, height = img.size
         word = img_data.search.strip().lower()
 
-        if img_data.position == 251:
-            break
-        start, end, duration = transcriptions.get_duration(i, word)
-        if not duration:
-            continue
+        start, end = trans.get_duration(i, word)
 
         data = img_data._asdict()
         data['start'] = start
         data['end'] = end
-        data['duration'] = duration
         duration_rows.append(data)
 
     duration_csv = results_csv.split('.')[0] + '-durations.csv'
@@ -65,7 +69,6 @@ def prepare_results_csv(results_csv, transcription_file):
         writer = DictWriter(fd, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(duration_rows)
-
 
 
 if __name__ == '__main__':
